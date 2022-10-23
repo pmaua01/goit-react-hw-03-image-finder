@@ -31,6 +31,7 @@ export class App extends Component {
         prevState.formSearchQuery !== this.state.formSearchQuery &&
         this.state.formSearchQuery !== ''
       ) {
+        this.setState({ load: true });
         // await this.setState(() => {
         //   return { page: 1 };
         // });
