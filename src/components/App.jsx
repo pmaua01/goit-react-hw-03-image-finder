@@ -1,5 +1,5 @@
 import { Component } from 'react';
-// import axios from 'axios';
+
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
@@ -7,8 +7,6 @@ import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 import { Spinner } from './Spinner/Spinner';
 import { api } from './helpers/Api';
-// axios.defaults.baseURL = 'https://pixabay.com/api/';
-// const API_KEY = '29770442-603a95234869127783f60906d';
 
 export class App extends Component {
   state = {
@@ -24,40 +22,22 @@ export class App extends Component {
   };
   async componentDidUpdate(prevProps, prevState) {
     try {
-      // console.log('prevState', prevState.formSearchQuery);
-      // console.log('this.state', this.state.formSearchQuery);
-
       if (
-        prevState.formSearchQuery !== this.state.formSearchQuery &&
-        this.state.formSearchQuery !== ''
+        (prevState.formSearchQuery !== this.state.formSearchQuery &&
+          this.state.formSearchQuery !== '') ||
+        prevState.page !== this.state.page
       ) {
         this.setState({ load: true });
-        // await this.setState(() => {
-        //   return { page: 1 };
-        // });
-        await this.resetPage();
 
         const response = await api(this.state.formSearchQuery, this.state.page);
 
-        this.setState({
-          load: false,
-
-          answerApi: response.hits,
+        this.setState(prevState => ({
+          answerApi: [...prevState.answerApi, ...response.hits],
           answerLength: response.hits.length,
-          total: response.total,
-        });
+          total: response.totalHits,
+          load: false,
+        }));
       }
-
-      // if (prevState.page !== this.state.page) {
-      //   this.setState({ load: true });
-      //   const response = await api(this.state.formSearchQuery, this.state.page);
-      //   console.log('State after', response.hits);
-      //   this.setState(prevState => ({
-      //     answerApi: [...prevState.answerApi.concat(response.hits)],
-      //     answerLength: response.hits.length,
-      //     load: false,
-      //   }));
-      // }
     } catch (error) {
       if (prevState.formSearchQuery !== this.state.formSearchQuery) {
         console.log(error.message);
@@ -66,19 +46,11 @@ export class App extends Component {
     }
   }
 
-  onClickLoadMore = async () => {
+  onClickLoadMore = () => {
     this.setState({ load: true });
-    // await this.setState(prevState => ({
-    //   page: prevState.page + 1,
-    // }));
-    await this.incrementPage();
-
-    const response = await api(this.state.formSearchQuery, this.state.page);
 
     this.setState(prevState => ({
-      answerApi: [...prevState.answerApi.concat(response.hits)],
-      answerLength: response.hits.length,
-      load: false,
+      page: prevState.page + 1,
     }));
   };
 
@@ -105,7 +77,7 @@ export class App extends Component {
   };
 
   onChangeSearchQuery = data => {
-    this.setState({ formSearchQuery: data });
+    this.setState({ formSearchQuery: data, page: 1, answerApi: [] });
   };
 
   loadMore = () => {
@@ -122,40 +94,30 @@ export class App extends Component {
   };
 
   render() {
-    // const answerApiLength = this.state.answerApi.length;
-    const {
-      total,
-      load,
-      answerLength,
-      openModal,
-      answerApi,
-      bigImgUrl,
-      error,
-    } = this.state;
+    const { total, page, load, openModal, answerApi, bigImgUrl, error } =
+      this.state;
+
+    let totalPage = total / 12;
 
     return (
       <div>
         <Searchbar onChangeSearchQuery={this.onChangeSearchQuery}></Searchbar>
         {total === 0 && <div>sorry no results found</div>}
-
         {answerApi.length !== 0 && (
           <ImageGallery>
             {load && <Spinner></Spinner>}
-
             <ImageGalleryItem
               answerFromApi={answerApi}
               onItemClick={this.onItemClick}
             ></ImageGalleryItem>
           </ImageGallery>
         )}
-
-        {answerLength !== 0 && answerLength >= 12 && (
+        {page < totalPage && !load && (
           <Button onClick={this.onClickLoadMore}></Button>
         )}
         {openModal && (
           <Modal bigImg={bigImgUrl} onClose={this.onCloseModal}></Modal>
         )}
-
         {error && <div>Oops something went wrong</div>}
       </div>
     );

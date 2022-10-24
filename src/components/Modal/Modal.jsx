@@ -17,8 +17,8 @@ export class Modal extends Component {
   };
 
   backdropClick = e => {
-    console.log('t', e.target);
-    console.log('ct', e.currentTarget);
+    // console.log('t', e.target);
+    // console.log('ct', e.currentTarget);
     if (e.currentTarget === e.target) {
       this.props.onClose();
     }
@@ -28,7 +28,7 @@ export class Modal extends Component {
     return (
       <div className={css.Overlay} onClick={this.backdropClick}>
         <div className={css.Modal}>
-          <img className={css.imgStyle} src={this.props.bigImg} alt="" />
+          <img className={css.ImgStyle} src={this.props.bigImg} alt="" />
         </div>
       </div>
     );
